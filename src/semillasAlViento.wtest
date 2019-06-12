@@ -1,0 +1,128 @@
+import plantas.*
+import parcelas.*
+import inta.*
+describe "plantas"{
+	//plantas
+	const mentaA = new Menta(anioDeObtencion = 2005, altura = 1)
+	const sojaA = new Soja(anioDeObtencion = 2008, altura = 0.7)
+	const hierbabuena = new Hierbabuena(anioDeObtencion = 2005, altura = 0.5)
+	const sojaTransgenica = new SojaTransgenica(anioDeObtencion = 2005, altura = 1)
+	const quinoa = new Quinoa(anioDeObtencion = 2003, altura = 1, horasDeSolQueTolera = 5)
+	const mentaB = new Menta(anioDeObtencion = 2005, altura = 0.5)
+	const quinoaB = new Quinoa(anioDeObtencion = 2003, altura = 1, horasDeSolQueTolera = 4)
+	const sojaB = new Soja(anioDeObtencion = 2008, altura = 0.4)
+	const sojaC = new Soja(anioDeObtencion = 2009, altura = 0.4)
+	
+	//parcelas
+	const parcela = new Parcela(ancho = 5, largo =10, plantas =[mentaA,hierbabuena, quinoa], 
+		horasDeSolQueRecibe= 6, tipo= industrial)
+	const parcelaB = new Parcela(ancho = 5, largo =10, plantas =[mentaA,hierbabuena,mentaB,sojaB,sojaC], 
+		horasDeSolQueRecibe= 6, tipo= ecologica )
+	const parcelaC = new Parcela(ancho = 5, largo =10, plantas =[mentaA,hierbabuena,mentaB,sojaB,sojaTransgenica], 
+		horasDeSolQueRecibe= 6, tipo= ecologica )
+	
+	fixture{
+		inta.agregarParcela(parcelaB)
+		inta.agregarParcela(parcelaC)
+	}
+	//plantas
+	test "la planta de mentaA va a ocupar 3m2"{
+		assert.equals(mentaA.espacioQueOcupa(), 3)
+	}
+	test "la planta de mentaA va a poder dar semillas"{
+		assert.that(mentaA.daSemillas())
+	}
+	test "la planta de menta no es fuerte"{
+		assert.notThat(mentaA.esFuerte())
+	}
+	test "la soja trangenica nunca da semillas nuevas"{
+		assert.notThat(sojaTransgenica.daSemillas())
+	}
+	test "la hierbaBuena ocupa 6 m2"{
+		assert.equals(hierbabuena.espacioQueOcupa(), 3)
+	}
+	test "la hierbaBuena va a ocupar el doble de espacio que la mentaB"{ //las dos miden 0.5
+		assert.that(mentaB.espacioQueOcupa()*2 == hierbabuena.espacioQueOcupa())
+	}
+	
+	test "la sojaA va a tolerar 7 horas de sol"{
+		assert.equals(sojaA.horasDeSolQueTolera(),7)
+	}
+	test "sojaA tolera menos de 10 horas de sol por lo que no es fuerte"{
+		assert.notThat(sojaA.esFuerte())
+	}
+	test "sojaA no es fuerte y mide menos de 1 un metro, entonces no dara semillas"{
+		assert.notThat(sojaA.daSemillas())
+	}
+	test "sojaA ocupara 0.35 m2, la mitad de su altura"{
+		assert.equals(sojaA.espacioQueOcupa(), 0.35)
+	}
+	test "si quinoa cumple la condicion alternativa y no es fuerte, da semillas"{
+		assert.that(quinoa.daSemillas())
+	}
+	
+	//parcelas
+	test "la superficie de la parcela es de 50 m2"{
+		assert.equals(parcela.superficie(), 50)
+	}
+	test "el maximo de plantas sera 27"{
+		assert.equals(parcela.cantMaximaDePlantasQueTolera(), 27)
+	}
+	test "la parcela va a tener complicaciones porque quinoa tolera menos horas de las que recibe"{
+		assert.that(parcela.tieneComplicaciones())
+	}
+	test "no se podra plantar quinoaB en la parsela por las horas de sol que tolera"{
+		assert.throwsExceptionWithMessage("no se puede plantar",{parcela.plantar(quinoaB)})
+	}
+	
+	test "se puede plantar mentaB y esta aparece en la lista de plantas"{
+		parcela.plantar(mentaB)
+		assert.that(parcela.plantas().contains(mentaB))
+	}
+	
+	// parcelas ideales
+	
+	test "parcela es ideal para mentaA"{
+		assert.that(mentaA.parcelaResultaIdeal(parcela))
+	}
+	
+	test "parcela no es ideal para sojaA"{
+		assert.notThat(sojaA.parcelaResultaIdeal(parcela))
+	}
+	
+	test "parcela es ideal para quinoa"{
+		assert.that(quinoa.parcelaResultaIdeal(parcela))
+	}
+	
+	test "parcela no es ideal para soja transgenica"{
+		assert.notThat(sojaTransgenica.parcelaResultaIdeal(parcela))
+	}
+	
+	//asociacion de plantas
+	
+	test "mentaA no se asocia bien a parcela"{
+		assert.notThat(parcela.plantaSeAsociaBien(mentaA))
+	}
+	test "mentaA se asocia bien a parcelaB"{
+		assert.that(parcelaB.plantaSeAsociaBien(mentaA))
+	}
+	
+	test "porcentaje de plantas bien asociadas de parcelaB es 100"{
+		assert.equals(parcelaB.porcentajeDePlantasBienAsociadas(), 100)
+	}
+	
+	test "porcentaje de plantas bien asociadas de parcelaC es 90"{
+		assert.equals(parcelaC.porcentajeDePlantasBienAsociadas(), 80)
+	}
+	
+	//inta
+	
+	test "promedio de plantas de inta es 5"{
+		assert.equals(inta.promedioDePlantas(), 5)
+	}
+	
+	test "la parcela mas sustentable de inta es la parcelaB"{
+		assert.equals(inta.parcelaMasAutosustentable(), parcelaB)
+	}
+}
+ 
